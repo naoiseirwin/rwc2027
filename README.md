@@ -1,12 +1,67 @@
-# Rugby World Cup 2027 forecast (static site)
+# Rugby World Cup 2027 forecast
 
-A single self-contained `index.html` (inline CSS and JS, no network requests, light and dark mode,
-mobile friendly), ready for GitHub Pages (`.nojekyll` included). Rebuild with:
+**Live site:** https://naoiseirwin.github.io/rwc2027/
 
-    python3 scripts/rwc2027/export_public.py
-    python3 scripts/publish/rwc2027_static.py
+A probabilistic forecast of the 2027 Men's Rugby World Cup in Australia: each team's chance of winning the tournament, reaching each knockout stage, and winning each of the 36 pool matches. Forecast as of 3 Nov 2026, using results through 31 Oct 2026.
 
-Forecast as of 3 Nov 2026, updated 3 Nov 2026, 3:20 PM ET. Bookmaker odds are shown for comparison only and are never model inputs.
+This is a personal project for fun and interest. It is not betting advice.
+
+## Headline odds (as of 3 Nov 2026)
+
+| Team | Model | Bookmaker implied* |
+|---|---|---|
+| South Africa | 32.7% | 25.4% |
+| New Zealand | 29.9% | 16.9% |
+| Ireland | 13.1% | 9.5% |
+| France | 7.9% | 17.6% |
+| Australia | 7.0% | 8.5% |
+| England | 5.4% | 10.9% |
+| Scotland | 2.6% | 2.9% |
+| Argentina | 1.4% | 4.5% |
+
+*OddsJet UK best price per team, quoted 3 Nov 2026 2:22 PM ET. Shown for comparison only; odds are never an input to the model.
+
+## How the model works
+
+- **Team strength.** Each team's strength is a 50/50 blend of two things: our own rating, built from every men's Test result since 2003, and the official World Rugby rankings.
+- **Matches.** A strength gap turns into a probability of winning and an expected winning margin for each match.
+- **Tournament.** The whole tournament is simulated 100,000 times (random seed 0). That covers pool matches with bonus points, pool tiebreaks, the best-third-place rule in the new 24-team format, and the knockout bracket. Each team's odds are the share of simulations it wins.
+- **No peeking.** Model settings were fixed ("frozen") using pre-2015 data only before any test was scored. Each backtest uses only data available before that tournament's opening match.
+
+## How well it has done (backtests)
+
+The same model, with the same frozen settings, was run on the last three World Cups as if forecasting them beforehand: 141 matches in all. Lower scores are better.
+
+**Match predictions (log loss)**
+
+| | 2015 | 2019 | 2023 |
+|---|---|---|---|
+| This model | **.344** | **.331** | **.338** |
+| Our ratings alone | .351 | .342 | .340 |
+| World Rugby rankings alone | .347 | .341 | .364 |
+| World Rugby's simple prediction formula | .360 | .406 | .391 |
+
+The blend was the best at predicting matches in all three tournaments.
+
+**Where it lost**
+
+- World Rugby's simple formula was better at predicting how far each team would go in 2015 and 2019.
+- In every year, at least one benchmark gave the eventual champion more probability than we did. In 2015 we gave New Zealand 56%, the formula gave them 67% and the bookmaker 39%. In 2019 we gave South Africa 14% and the bookmaker 17%. In 2023 we gave South Africa 21% and the formula 23%.
+- The model is slightly cautious on 60–90% favourites and slightly overconfident at 90%+.
+
+**A rejected upgrade.** A second version added home advantage, travel and rest effects, more weight on recent form, and fatter-tailed margins. It was frozen on pre-2015 data and then tested the same way. It scored worse (log loss .351 vs .338), so it was not adopted.
+
+## Caveats and items to confirm
+
+- The 2027 points and bonus rules are assumed to match 2019's.
+- The pool tiebreak order and the best-third-place table still need checking against World Rugby's official publications.
+- Drawn knockout matches are treated as 50/50.
+- Travel, rest and squad changes are not modelled.
+- Three tournaments is a small test sample.
+
+## About this repo
+
+`index.html` is the whole site: one self-contained file with no network requests, light and dark mode, and mobile friendly. It is generated from a private forecasting framework, which is not included here.
 
 ## Sources
 - World Rugby match API (backs world.rugby and rugbyworldcup.com fixtures/results): https://api.wr-rims-prod.pulselive.com/rugby/v3/match?startDate=YYYY-01-01&endDate=YYYY-12-31&sort=asc&pageSize=100&page=N&sport=mru (dated n/a; accessed 2026-11-03 14:57-15:05 ET (per-request times in data/rwc2027/raw/fetch_log.csv))
